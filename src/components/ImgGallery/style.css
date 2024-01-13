@@ -21,12 +21,13 @@ body {
 .swiper {
     width: 50%;
     height: 500px;
+    margin-top: 100px;
 }
 
 .swiper-slide {
     text-align: center;
     font-size: 18px;
-    background: #ddd8d8;
+    background: rgb(82, 84, 83);
 
     /* Center slide text vertically */
     display: flex;
