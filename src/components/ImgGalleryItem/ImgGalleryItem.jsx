@@ -1,4 +1,3 @@
-// import { Component } from 'react';
 import { ImgGalleryLi, ImgGalleryLiImage } from './ImgGalleryItem.styled';
 
 const ImgGalleryItem = props => {
