@@ -1,4 +1,4 @@
-import { Component } from 'react';
+// import { Component } from 'react';
 import Searchbar from '../SearchBar/SearchBar';
 import imgFinder from '../../api/imgFinder.js';
 import ImgGallery from '../ImgGallery/ImgGallery.jsx';
@@ -6,84 +6,68 @@ import Loader from '../Loader/Loader.jsx';
 import Button from '../Button/Button.jsx';
 import Modal from '../Modal/Modal.jsx';
 import StyledApp from './App.styled.jsx';
+import { useEffect, useState } from 'react';
 
-class App extends Component {
-  state = {
-    images: [],
-    isLoading: false,
-    query: '',
-    showModal: false,
-    page: 1,
-    loadMore: false,
-    selectedImage: null,
+const App = () => {
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [query, setQuery] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [page, setPage] = useState(1);
+  const [loadMore, setLoadMore] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  useEffect(() => {
+    const getImages = async () => {
+      try {
+        setIsLoading(true);
+        const resp = await imgFinder(query, page);
+        const totalHits = resp.totalHits;
+        const hits = resp.hits.map(({ id, webformatURL, largeImageURL }) => ({
+          id,
+          webformatURL,
+          largeImageURL,
+        }));
+        setImages(prevState => [...prevState, ...hits]);
+        setLoadMore(page < Math.ceil(totalHits / 12));
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (!query) return;
+    getImages();
+  }, [query, page]);
+
+  const handleFormSubmit = inputValue => {
+    setQuery(inputValue);
+    setPage(1);
+    setImages([]);
   };
 
-  componentDidUpdate(_, prevState) {
-    if (
-      this.state.page !== prevState.page ||
-      this.state.query !== prevState.query
-    ) {
-      this.getImages();
-    }
-  }
-
-  getImages = async () => {
-    try {
-      this.setState({ isLoading: true });
-      const resp = await imgFinder(this.state.query, this.state.page);
-      const totalHits = resp.totalHits;
-      const hits = resp.hits.map(({ id, webformatURL, largeImageURL }) => ({
-        id,
-        webformatURL,
-        largeImageURL,
-      }));
-      this.setState(prevState => ({
-        images: [...prevState.images, ...hits],
-        loadMore: this.state.page < Math.ceil(totalHits / 12),
-      }));
-    } catch (err) {
-      console.log(err);
-    } finally {
-      this.setState({ isLoading: false });
-    }
+  const handleLoadMore = () => {
+    setPage(prevState => prevState + 1);
   };
 
-  handleFormSubmit = ({ query }) => {
-    this.setState({
-      query,
-      page: 1,
-      images: [],
-    });
+  const handleModal = image => {
+    setShowModal(prevState => !prevState);
+    setSelectedImage(image);
   };
 
-  handleLoadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
-  };
+  return (
+    <StyledApp>
+      <Searchbar onSubmit={handleFormSubmit} />
 
-  handleModal = image => {
-    this.setState(prevState => ({
-      showModal: !prevState.showModal,
-      selectedImage: image,
-    }));
-  };
-
-  render() {
-    const { isLoading, showModal, selectedImage, loadMore } = this.state;
-    return (
-      <StyledApp>
-        <Searchbar onSubmit={this.handleFormSubmit} />
-
-        <ImgGallery images={this.state.images} handleModal={this.handleModal} />
-        {showModal && (
-          <Modal imageData={selectedImage} onHideModal={this.handleModal} />
-        )}
-        {isLoading && <Loader />}
-        {loadMore && <Button loadMore={this.handleLoadMore} />}
-      </StyledApp>
-    );
-  }
-}
+      <ImgGallery images={images} handleModal={handleModal} />
+      {showModal && (
+        <Modal imageData={selectedImage} onHideModal={handleModal} />
+      )}
+      {isLoading && <Loader />}
+      {loadMore && <Button loadMore={handleLoadMore} />}
+    </StyledApp>
+  );
+};
 
 export default App;

@@ -4,7 +4,6 @@ import ImgGalleryList from './ImgGallery.styled';
 const ImgGallery = ({ images, handleModal }) => {
   return (
     <ImgGalleryList>
-      
       {images &&
         images.map((image, index) => (
           <ImgGalleryItem
